@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -21,14 +21,13 @@ const THEME = {
   text: "#FFFFFF",
   subtext: "#B3B3B3",
   accent: "#E50914",
-  muted: "#2a2a2a",
 };
 
 export default function FavoriteScreen({ navigation }) {
   const [favorites, setFavorites] = useState([]);
 
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       loadFavorites();
     }, [])
   );
@@ -48,17 +47,20 @@ export default function FavoriteScreen({ navigation }) {
     <TouchableOpacity
       style={styles.card}
       onPress={() => navigation.navigate("Detail", { shoe: item })}
+      onLongPress={() => removeFavorite(item.id)}
     >
       <Image source={{ uri: item.shoeUrl }} style={styles.image} />
-      <View style={{ flex: 1, padding: 10 }}>
-        <View style={styles.row}>
-          <Text style={styles.name}>{item.name}</Text>
-          <TouchableOpacity onPress={() => removeFavorite(item.id)}>
-            <Ionicons name="trash-outline" size={20} color={THEME.subtext} />
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.brand}>{item.brand}</Text>
+      <View style={styles.info}>
+        <Text style={styles.name} numberOfLines={1}>
+          {item.name}
+        </Text>
         <Text style={styles.price}>${item.price}</Text>
+        <TouchableOpacity
+          style={styles.heartBtn}
+          onPress={() => removeFavorite(item.id)}
+        >
+          <Ionicons name="heart" size={20} color={THEME.accent} />
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
@@ -66,20 +68,29 @@ export default function FavoriteScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" />
-      <FlatList
-        data={favorites}
-        keyExtractor={(i) => i.id.toString()}
-        renderItem={renderFavorite}
-        ListHeaderComponent={<Text style={styles.title}>Your Favorites</Text>}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Ionicons name="heart-outline" size={40} color={THEME.subtext} />
-            <Text style={{ color: THEME.subtext, marginTop: 8 }}>
-              No favorites yet.
-            </Text>
-          </View>
-        }
-      />
+      <Text style={styles.title}>Your Favorites</Text>
+
+      {favorites.length > 0 ? (
+        <FlatList
+          data={favorites}
+          keyExtractor={(i) => i.id.toString()}
+          renderItem={renderFavorite}
+          numColumns={2}
+          columnWrapperStyle={{ justifyContent: "space-between" }}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+        />
+      ) : (
+        <View style={styles.empty}>
+          <Ionicons name="heart-outline" size={50} color={THEME.subtext} />
+          <Text style={styles.emptyText}>No favorites yet.</Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Home")}
+            style={styles.goHomeBtn}
+          >
+            <Text style={styles.goHomeText}>Go to Home</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -92,26 +103,38 @@ const styles = StyleSheet.create({
   },
   title: {
     color: THEME.text,
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: "800",
     margin: 16,
   },
   card: {
-    flexDirection: "row",
     backgroundColor: THEME.card,
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: "hidden",
+    marginBottom: 16,
+    flex: 0.48,
+    position: "relative",
   },
-  image: { width: 120, height: 120 },
-  name: { color: THEME.text, fontSize: 16, fontWeight: "700", flex: 1 },
-  brand: { color: THEME.subtext, marginTop: 4 },
-  price: { color: THEME.accent, fontSize: 15, fontWeight: "700", marginTop: 4 },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+  image: { width: "100%", height: 140 },
+  info: { padding: 10 },
+  name: { color: THEME.text, fontWeight: "700", fontSize: 14 },
+  price: { color: "#FFFFFF", fontWeight: "600", marginTop: 4 },
+  heartBtn: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: THEME.soft,
+    padding: 6,
+    borderRadius: 50,
   },
-  empty: { alignItems: "center", marginTop: 40 },
+  empty: { flex: 1, alignItems: "center", justifyContent: "center" },
+  emptyText: { color: THEME.subtext, marginTop: 10 },
+  goHomeBtn: {
+    backgroundColor: THEME.accent,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  goHomeText: { color: "#fff", fontWeight: "600" },
 });

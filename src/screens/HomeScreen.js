@@ -17,13 +17,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 
 const THEME = {
-  bg: "#0b0b0c",
-  card: "#121212",
-  soft: "#1f1f1f",
+  bg: "#0E0E10",
+  card: "#18181B",
+  soft: "#222327",
   text: "#FFFFFF",
-  subtext: "#B3B3B3",
-  accent: "#E50914",
-  muted: "#2a2a2a",
+  subtext: "#A0A0A0",
+  accent: "#00B4D8",
+  muted: "#2A2A2A",
 };
 
 export default function HomeScreen({ navigation }) {
@@ -35,6 +35,7 @@ export default function HomeScreen({ navigation }) {
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
+  const [sortBy, setSortBy] = useState(null);
 
   useEffect(() => {
     fetchShoes();
@@ -57,7 +58,6 @@ export default function HomeScreen({ navigation }) {
       const data = await res.json();
 
       await AsyncStorage.setItem("shoes_cache", JSON.stringify(data));
-
       const sorted = [...data].sort(
         (a, b) => (b.rating || 0) - (a.rating || 0)
       );
@@ -105,26 +105,37 @@ export default function HomeScreen({ navigation }) {
     setFilteredShoes(list);
   };
 
+  const handleSort = (type) => {
+    setSortBy(type);
+    let sorted = [...filteredShoes];
+    if (type === "price") sorted.sort((a, b) => a.price - b.price);
+    if (type === "rating")
+      sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    setFilteredShoes(sorted);
+  };
+
   const renderShoeCard = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
       onPress={() => navigation.navigate("Detail", { shoe: item })}
+      activeOpacity={0.8}
     >
       <Image source={{ uri: item.shoeUrl }} style={styles.image} />
-      <View style={{ flex: 1, padding: 10 }}>
+      <View style={styles.cardBody}>
         <View style={styles.cardHeader}>
-          <Text style={styles.name}>{item.name}</Text>
+          <Text numberOfLines={1} style={styles.name}>
+            {item.name}
+          </Text>
           <TouchableOpacity onPress={() => toggleFavorite(item)}>
             <Ionicons
               name={isFavorite(item.id) ? "heart" : "heart-outline"}
-              size={20}
-              color={isFavorite(item.id) ? THEME.accent : THEME.subtext}
+              size={18}
+              color={isFavorite(item.id) ? "#E50914" : THEME.subtext} // đỏ Netflix
             />
           </TouchableOpacity>
         </View>
         <Text style={styles.brand}>{item.brand}</Text>
         <Text style={styles.price}>${item.price}</Text>
-        <Text style={styles.category}>{item.category}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -146,9 +157,16 @@ export default function HomeScreen({ navigation }) {
         data={filteredShoes}
         keyExtractor={(i) => i.id.toString()}
         renderItem={renderShoeCard}
+        numColumns={2}
+        columnWrapperStyle={{
+          justifyContent: "space-between",
+          paddingHorizontal: 16,
+        }}
         ListHeaderComponent={
           <>
-            <Text style={styles.title}>Sneakers</Text>
+            <Text style={styles.title}>The Sneakers</Text>
+
+            {/* Search */}
             <View style={styles.searchRow}>
               <Ionicons
                 name="search"
@@ -165,6 +183,7 @@ export default function HomeScreen({ navigation }) {
               />
             </View>
 
+            {/* Category filter */}
             <View style={styles.categoryRow}>
               <TouchableOpacity
                 style={[
@@ -202,6 +221,31 @@ export default function HomeScreen({ navigation }) {
                 </TouchableOpacity>
               ))}
             </View>
+
+            {/* Sort row */}
+            <View style={styles.sortRow}>
+              <Text style={styles.sortLabel}>Sort by:</Text>
+              <TouchableOpacity onPress={() => handleSort("price")}>
+                <Text
+                  style={[
+                    styles.sortOption,
+                    sortBy === "price" && styles.sortActive,
+                  ]}
+                >
+                  Price
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleSort("rating")}>
+                <Text
+                  style={[
+                    styles.sortOption,
+                    sortBy === "rating" && styles.sortActive,
+                  ]}
+                >
+                  Rating
+                </Text>
+              </TouchableOpacity>
+            </View>
           </>
         }
         ListEmptyComponent={
@@ -227,7 +271,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: THEME.bg,
   },
-  title: { color: THEME.text, fontSize: 30, fontWeight: "800", margin: 16 },
+  title: {
+    color: THEME.text,
+    fontSize: 30,
+    fontWeight: "800",
+    margin: 16,
+  },
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -235,12 +284,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     borderRadius: 12,
     padding: 10,
+    marginBottom: 8,
   },
   searchInput: { flex: 1, color: THEME.text },
   categoryRow: {
     flexDirection: "row",
     marginVertical: 10,
     marginHorizontal: 16,
+    flexWrap: "wrap",
   },
   chip: {
     paddingHorizontal: 12,
@@ -248,27 +299,51 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.muted,
     borderRadius: 20,
     marginRight: 8,
+    marginBottom: 6,
   },
   chipActive: { backgroundColor: THEME.accent },
   chipText: { color: THEME.subtext },
-  chipTextActive: { color: THEME.bg },
-  card: {
-    flexDirection: "row",
-    backgroundColor: THEME.card,
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  image: { width: 120, height: 120 },
-  name: { color: THEME.text, fontSize: 16, fontWeight: "700", flex: 1 },
-  brand: { color: THEME.subtext, marginTop: 4 },
-  price: { color: THEME.accent, fontSize: 15, fontWeight: "700", marginTop: 4 },
-  category: { color: THEME.subtext, fontSize: 13, marginTop: 4 },
-  cardHeader: {
+  chipTextActive: { color: THEME.bg, fontWeight: "600" },
+  sortRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    marginHorizontal: 16,
+    marginBottom: 10,
   },
+  sortLabel: { color: THEME.subtext, marginRight: 10 },
+  sortOption: {
+    color: THEME.text,
+    marginRight: 14,
+    fontWeight: "500",
+  },
+  sortActive: { color: THEME.accent },
+  card: {
+    backgroundColor: THEME.card,
+    borderRadius: 16,
+    marginBottom: 16,
+    width: "48%",
+    overflow: "hidden",
+  },
+  image: {
+    width: "100%",
+    height: 140,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  cardBody: { padding: 10 },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  name: { color: THEME.text, fontSize: 14, fontWeight: "700", flex: 1 },
+  brand: { color: THEME.subtext, fontSize: 12, marginTop: 2 },
+  price: {
+    color: THEME.text, // từ THEME.accent → THEME.text
+    fontSize: 14,
+    fontWeight: "700",
+    marginTop: 6,
+  },
+
   empty: { alignItems: "center", marginTop: 40 },
 });

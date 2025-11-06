@@ -9,21 +9,22 @@ import {
   SafeAreaView,
   StatusBar,
   Platform,
+  Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 
 const THEME = {
-  bg: "#0b0b0c",
-  card: "#121212",
-  soft: "#1f1f1f",
+  bg: "#0E0E10",
+  card: "#18181B",
+  soft: "#1F1F23",
   text: "#FFFFFF",
-  subtext: "#B3B3B3",
-  accent: "#E50914",
-  muted: "#2a2a2a",
+  subtext: "#A3A3A3",
+  accent: "#00B4D8", // xanh dương nhạt
+  heart: "#E50914", // đỏ Netflix
 };
 
-export default function DetailScreen({ route, navigation }) {
+export default function DetailScreen({ route }) {
   const { shoe } = route.params;
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -43,13 +44,29 @@ export default function DetailScreen({ route, navigation }) {
     const favs = await AsyncStorage.getItem("favorites");
     let parsed = favs ? JSON.parse(favs) : [];
     let updated;
+
     if (isFavorite) {
       updated = parsed.filter((f) => f.id !== shoe.id);
     } else {
       updated = [...parsed, shoe];
     }
+
     await AsyncStorage.setItem("favorites", JSON.stringify(updated));
     setIsFavorite(!isFavorite);
+  };
+
+  const addToCart = async () => {
+    const cart = await AsyncStorage.getItem("cart");
+    let parsed = cart ? JSON.parse(cart) : [];
+
+    if (parsed.some((item) => item.id === shoe.id)) {
+      Alert.alert("Cart", "This shoe is already in your cart.");
+      return;
+    }
+
+    parsed.push({ ...shoe, quantity: 1 });
+    await AsyncStorage.setItem("cart", JSON.stringify(parsed));
+    Alert.alert("Cart", "Added to cart successfully!");
   };
 
   return (
@@ -58,42 +75,62 @@ export default function DetailScreen({ route, navigation }) {
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <Image source={{ uri: shoe.shoeUrl }} style={styles.image} />
 
-        <View style={styles.headerRow}>
-          <Text style={styles.name}>{shoe.name}</Text>
-          <TouchableOpacity onPress={toggleFavorite}>
-            <Ionicons
-              name={isFavorite ? "heart" : "heart-outline"}
-              size={28}
-              color={isFavorite ? THEME.accent : THEME.subtext}
-            />
-          </TouchableOpacity>
-        </View>
+        <View style={styles.infoCard}>
+          <View style={styles.headerRow}>
+            <Text style={styles.name}>{shoe.name}</Text>
+            <TouchableOpacity onPress={toggleFavorite}>
+              <Ionicons
+                name={isFavorite ? "heart" : "heart-outline"}
+                size={26}
+                color={isFavorite ? THEME.heart : THEME.subtext}
+              />
+            </TouchableOpacity>
+          </View>
 
-        <Text style={styles.brand}>{shoe.brand}</Text>
-        <Text style={styles.category}>Category: {shoe.category}</Text>
-        <Text style={styles.price}>${shoe.price}</Text>
-        <Text style={styles.rating}>⭐ {shoe.rating}/100</Text>
-        <Text style={styles.availability}>
-          {shoe.isAvailable ? "In Stock" : "Out of Stock"}
-        </Text>
-
-        <Text style={styles.sectionTitle}>Description</Text>
-        <Text style={styles.description}>{shoe.description}</Text>
-
-        <TouchableOpacity
-          style={[styles.btn, { backgroundColor: THEME.accent }]}
-          onPress={toggleFavorite}
-        >
-          <Ionicons
-            name={isFavorite ? "heart-dislike" : "heart"}
-            size={20}
-            color="#fff"
-            style={{ marginRight: 8 }}
-          />
-          <Text style={styles.btnText}>
-            {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+          <Text style={styles.brand}>{shoe.brand}</Text>
+          <Text style={styles.category}>Category: {shoe.category}</Text>
+          <Text style={styles.price}>${shoe.price}</Text>
+          <Text style={styles.rating}>⭐ {shoe.rating}/100</Text>
+          <Text style={styles.availability}>
+            {shoe.isAvailable ? "In Stock" : "Out of Stock"}
           </Text>
-        </TouchableOpacity>
+
+          <Text style={styles.sectionTitle}>Description</Text>
+          <Text style={styles.description}>{shoe.description}</Text>
+
+          {/* Action buttons */}
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={[styles.btn, { backgroundColor: THEME.heart }]}
+              onPress={toggleFavorite}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name={isFavorite ? "heart-dislike" : "heart"}
+                size={20}
+                color="#fff"
+                style={{ marginRight: 8 }}
+              />
+              <Text style={styles.btnText}>
+                {isFavorite ? "Remove Favorite" : "Add to Favorite"}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.btn, { backgroundColor: THEME.accent }]}
+              onPress={addToCart}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="cart"
+                size={20}
+                color="#fff"
+                style={{ marginRight: 8 }}
+              />
+              <Text style={styles.btnText}>Add to Cart</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -107,19 +144,33 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
   },
   image: {
     width: "100%",
-    height: 280,
-    borderRadius: 12,
+    height: 320,
+    borderRadius: 18,
     resizeMode: "cover",
-    marginBottom: 16,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  infoCard: {
+    backgroundColor: THEME.card,
+    borderRadius: 18,
+    padding: 18,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
   },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 4,
   },
   name: {
     color: THEME.text,
@@ -131,15 +182,15 @@ const styles = StyleSheet.create({
   brand: {
     color: THEME.subtext,
     fontSize: 16,
-    marginTop: 4,
+    marginTop: 2,
   },
   category: {
     color: THEME.subtext,
     fontSize: 14,
-    marginTop: 4,
+    marginTop: 2,
   },
   price: {
-    color: THEME.accent,
+    color: THEME.text,
     fontSize: 20,
     fontWeight: "700",
     marginTop: 10,
@@ -163,17 +214,23 @@ const styles = StyleSheet.create({
     marginTop: 8,
     lineHeight: 22,
   },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 24,
+  },
   btn: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,
-    borderRadius: 10,
-    marginTop: 20,
+    borderRadius: 12,
+    marginHorizontal: 4,
   },
   btnText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
   },
 });
