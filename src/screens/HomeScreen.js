@@ -130,7 +130,7 @@ export default function HomeScreen({ navigation }) {
             <Ionicons
               name={isFavorite(item.id) ? "heart" : "heart-outline"}
               size={18}
-              color={isFavorite(item.id) ? "#E50914" : THEME.subtext} // đỏ Netflix
+              color={isFavorite(item.id) ? "#E50914" : THEME.subtext}
             />
           </TouchableOpacity>
         </View>
@@ -183,43 +183,33 @@ export default function HomeScreen({ navigation }) {
               />
             </View>
 
-            {/* Category filter */}
-            <View style={styles.categoryRow}>
-              <TouchableOpacity
-                style={[
-                  styles.chip,
-                  selectedCategory === "All" && styles.chipActive,
-                ]}
-                onPress={() => setSelectedCategory("All")}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    selectedCategory === "All" && styles.chipTextActive,
-                  ]}
-                >
-                  All
-                </Text>
-              </TouchableOpacity>
-              {categories.map((c) => (
-                <TouchableOpacity
-                  key={c}
-                  style={[
-                    styles.chip,
-                    selectedCategory === c && styles.chipActive,
-                  ]}
-                  onPress={() => setSelectedCategory(c)}
-                >
-                  <Text
+            {/* ✅ Horizontal Category Scroll */}
+            <View style={{ marginVertical: 10 }}>
+              <FlatList
+                data={["All", ...categories]}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item) => item}
+                contentContainerStyle={{ paddingHorizontal: 16 }}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
                     style={[
-                      styles.chipText,
-                      selectedCategory === c && styles.chipTextActive,
+                      styles.chip,
+                      selectedCategory === item && styles.chipActive,
                     ]}
+                    onPress={() => setSelectedCategory(item)}
                   >
-                    {c}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Text
+                      style={[
+                        styles.chipText,
+                        selectedCategory === item && styles.chipTextActive,
+                      ]}
+                    >
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
             </View>
 
             {/* Sort row */}
@@ -287,23 +277,25 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   searchInput: { flex: 1, color: THEME.text },
-  categoryRow: {
-    flexDirection: "row",
-    marginVertical: 10,
-    marginHorizontal: 16,
-    flexWrap: "wrap",
-  },
+
+  // ✅ Cập nhật cho horizontal category
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     backgroundColor: THEME.muted,
     borderRadius: 20,
     marginRight: 8,
-    marginBottom: 6,
   },
-  chipActive: { backgroundColor: THEME.accent },
+  chipActive: {
+    backgroundColor: THEME.accent,
+    shadowColor: THEME.accent,
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 3,
+  },
   chipText: { color: THEME.subtext },
   chipTextActive: { color: THEME.bg, fontWeight: "600" },
+
   sortRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -339,11 +331,10 @@ const styles = StyleSheet.create({
   name: { color: THEME.text, fontSize: 14, fontWeight: "700", flex: 1 },
   brand: { color: THEME.subtext, fontSize: 12, marginTop: 2 },
   price: {
-    color: THEME.text, // từ THEME.accent → THEME.text
+    color: THEME.text,
     fontSize: 14,
     fontWeight: "700",
     marginTop: 6,
   },
-
   empty: { alignItems: "center", marginTop: 40 },
 });
