@@ -4,11 +4,11 @@
     "slug": "se1720-nguyen-sy-quan-se184831",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/adaptive-icon.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/adaptive-icon.png",
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -24,7 +24,7 @@
       "package": "com.nsq1201.se1720nguyensyquanse184831"
     },
     "web": {
-      "favicon": "./assets/adaptive-icon.png"
+      "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
