@@ -20,10 +20,16 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.nsq1201.se1720nguyensyquanse184831"
     },
     "web": {
       "favicon": "./assets/adaptive-icon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "81f79e37-da09-4677-b6eb-f46f55b8fa6b"
+      }
     }
   }
 }
